@@ -1,0 +1,80 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"database/sql"
+	_ "github.com/lib/pq"
+	"github.com/fumbwejohnny-jfk/gotar/internal/config"
+	"github.com/fumbwejohnny-jfk/gotar/internal/database"
+	"github.com/fumbwejohnny-jfk/gotar/cmds"
+)
+import _ "github.com/lib/pq"
+
+func main() {
+	cfg := config.Read()
+	if cfg == nil {
+		fmt.Println("Error reading config file")
+		return
+	}
+	// fmt.Println("DB_URL:", cfg.DB_URL)
+	
+	// connect to database using cfg.DB_URL
+	db, err := sql.Open("postgres", cfg.DB_URL)
+	if err != nil {
+		fmt.Println("Error connecting to database:", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	//  db instance
+	dbQueries := database.New(db)
+
+
+	// Create a new State and Commands instance using the config
+	state := cmds.NewState(cfg, dbQueries)
+
+	// Create a new Commands instance using the config
+	commands := cmds.NewCommands()
+
+	
+
+	// get command-line arguments
+	args := os.Args[1:]
+	if len(args) < 1 {
+		fmt.Println("No command provided")
+		os.Exit(1)
+	}
+
+	cmd := &cmds.Command{
+		Name: args[0],
+		Args: args[1:],
+	}
+
+	
+
+	switch cmd.Name {
+		case "login":
+			// Regiser the login command handler
+			commands.Register("login", cmds.HandlerLogin)
+			
+			// Execute the login command
+			err = commands.Run(state, cmd)
+			if err != nil {
+				fmt.Println("Error executing login command:", err)
+				os.Exit(1)
+			}
+		case "register":
+			// Regiser the register command handler
+			commands.Register("register", cmds.HandlerRegister)
+
+			// Execute the register command
+			err = commands.Run(state, cmd)
+			if err != nil {
+				fmt.Println("Error executing register command:", err)
+				os.Exit(1)
+			}
+	}
+	
+
+}
