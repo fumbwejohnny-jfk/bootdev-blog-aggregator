@@ -232,7 +232,6 @@ func HandlerAddFeed(s *State, cmd *Command) error {
 		return fmt.Errorf("feed with URL %s already exists", feedURL)
 	}
 
-
 	// Create a new feed in the database
 	newFeed := database.CreateFeedParams{
 		ID:        uuid.New(),
@@ -273,6 +272,86 @@ func HandlerFeeds(s *State, cmd *Command) error {
 		} else {
 			fmt.Printf("— %s\n", user)
 		}
+	}
+	return nil
+}
+
+// HandlerFollowFeed command handler that allows a user to follow a feed
+func HandlerFollow(s *State, cmd *Command) error {
+	if len(cmd.Args) < 1 {
+		return fmt.Errorf("followfeed command requires a feed URL argument")
+	}
+	feedURL := cmd.Args[0]
+
+	// get context
+	ctx := context.Background()
+
+	// get current user from config
+	currentUserName := s.cfg.CurrentUserName
+	if currentUserName == "" {
+		return fmt.Errorf("no user is currently logged in. Please log in first.")
+	}
+
+	// Check if the current user exists in the database
+	currentUser, err := s.db.GetUser(ctx, currentUserName)
+	if err != nil || currentUser.ID == uuid.Nil {
+		return fmt.Errorf("current user %s does not exist in the database", currentUserName)
+	}
+
+	// Check if feed exists
+	existingFeed, err := s.db.GetFeed(ctx, feedURL)
+	if err != nil || existingFeed.ID == uuid.Nil {
+		return fmt.Errorf("feed with URL %s does not exist", feedURL)
+	}
+
+	// Create a new feed follow in the database
+	newFeedFollow := database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		UserID:    currentUser.ID,
+		FeedID:    existingFeed.ID,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	createdFeedFollow, err := s.db.CreateFeedFollow(ctx, newFeedFollow)
+	if err != nil {
+		return fmt.Errorf("failed to create feed follow: %v", err)
+	}
+
+	fmt.Printf("User %s is now following feed %s\n", createdFeedFollow.UserName, createdFeedFollow.FeedName)
+	fmt.Printf("Feed follow created: %+v\n", createdFeedFollow)
+	return nil
+}
+
+// HandlerListFollowedFeeds command handler that lists all feeds followed by the current user
+func HandlerFollowing(s *State, cmd *Command) error{
+	// get context
+	ctx := context.Background()
+
+	// get current user from config
+	currentUserName := s.cfg.CurrentUserName
+	if currentUserName == "" {
+		return fmt.Errorf("no user is currently logged in. Please log in first.")
+	}
+
+	// Check if the current user exists in the database
+	currentUser, err := s.db.GetUser(ctx, currentUserName)
+	if err != nil || currentUser.ID == uuid.Nil {
+		return fmt.Errorf("current user %s does not exist in the database", currentUserName)
+	}
+
+	// Get all feeds followed by the current user
+	followedFeeds, err := s.db.GetFeedFollowsForUser(ctx, currentUser.ID)
+	if err != nil {
+		return fmt.Errorf("failed to get followed feeds: %v", err)
+	}
+
+	// Print the list of followed feeds
+	fmt.Printf("Feeds followed by user %s:\n", currentUserName)
+	for _, feed := range followedFeeds {
+		fmt.Printf("* %s — %s\n", feed.UserName, feed.FeedName)
+	}
+	if len(followedFeeds) == 0 {
+		fmt.Println("No feeds followed.")
 	}
 	return nil
 }

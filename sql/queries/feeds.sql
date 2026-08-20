@@ -23,3 +23,33 @@ SELECT * FROM feeds;
 -- name: DeleteFeeds :exec
 DELETE FROM feeds;
 
+-- name: CreateFeedFollow :one
+
+WITH new_follow AS (
+    INSERT INTO feed_follows (id, user_id, feed_id, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING *
+)
+SELECT
+    new_follow.*,
+    users.name AS user_name,
+    feeds.name AS feed_name
+FROM new_follow
+JOIN users
+    ON users.id = new_follow.user_id
+JOIN feeds
+    ON feeds.id = new_follow.feed_id;
+
+-- name: GetFeedFollowsForUser :many
+SELECT
+    feed_follows.id,
+    feed_follows.user_id,
+    feed_follows.feed_id,
+    feeds.name AS feed_name,
+    users.name AS user_name
+FROM feed_follows
+INNER JOIN users
+    ON users.id = feed_follows.user_id
+INNER JOIN feeds
+    ON feeds.id = feed_follows.feed_id
+    WHERE feed_follows.user_id = $1;

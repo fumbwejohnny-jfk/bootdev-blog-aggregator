@@ -118,6 +118,20 @@ func main() {
 				fmt.Println("Error executing addfeed command:", err)
 				os.Exit(1)
 			}
+
+			fmt.Println(cmd.Args)
+			cmd.Name = "follow"
+			cmd.Args[0] = cmd.Args[1]
+
+			// Regiser the follow command handler
+			commands.Register("follow", cmds.HandlerFollow)
+
+			// Execute the follow command
+			err = commands.Run(state, cmd)
+			if err != nil {
+				fmt.Println("Error executing follow command:", err)
+				os.Exit(1)
+			}
 		
 		case "feeds":
 			// Regiser the feeds command handler
@@ -129,7 +143,27 @@ func main() {
 				fmt.Println("Error executing feeds command:", err)
 				os.Exit(1)
 			}
+		case "follow":
+			// Regiser the follow command handler
+			commands.Register("follow", cmds.HandlerFollow)
+
+			// Execute the follow command
+			err = commands.Run(state, cmd)
+			if err != nil {
+				fmt.Println("Error executing follow command:", err)
+				os.Exit(1)
+			}
 		
+		case "following":
+			// Regiser the following command handler
+			commands.Register("following", cmds.HandlerFollowing)
+
+			// Execute the following command
+			err = commands.Run(state, cmd)
+			if err != nil {
+				fmt.Println("Error executing following command:", err)
+				os.Exit(1)
+			}
 		default:
 			fmt.Println("Unknown command:", cmd.Name)
 			os.Exit(1)
