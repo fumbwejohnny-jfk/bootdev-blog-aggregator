@@ -96,6 +96,18 @@ func main() {
 				fmt.Println("Error executing users command:", err)
 				os.Exit(1)
 			}
+		
+		case "agg":
+			// Regiser the agg command handler
+			commands.Register("agg", cmds.HandlerAgg)
+
+			// Execute the agg command
+			err = commands.Run(state, cmd)
+			if err != nil {
+				fmt.Println("Error executing agg command:", err)
+				os.Exit(1)
+			}
+		
 		default:
 			fmt.Println("Unknown command:", cmd.Name)
 			os.Exit(1)

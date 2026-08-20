@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/fumbwejohnny-jfk/gotar/internal/config"
 	"github.com/fumbwejohnny-jfk/gotar/internal/database"
+	"github.com/fumbwejohnny-jfk/gotar/rss"
 	"github.com/google/uuid"
 	"time"
 	"context"
@@ -176,4 +177,30 @@ func HandlerUsers(s *State, cmd *Command) error {
 		fmt.Println()
 	}
 	return nil
+}
+
+func HandlerAgg(s *State, cmd *Command) error {
+	// get context
+	ctx := context.Background()
+
+	// Get all rss feeds from  website and aggregate them into a single feed
+	feed, err := rss.FetchFeed(ctx, "https://wagslane.dev/index.xml")
+	if err != nil {
+		return fmt.Errorf("failed to fetch feed: %v", err)
+	}
+
+	// Print the aggregated feed
+	fmt.Printf(" %s\n", feed.Channel.Title)
+	fmt.Printf(" %s\n", feed.Channel.Link)
+	fmt.Printf(" %s\n", feed.Channel.Description)
+	for _, item := range feed.Channel.Items {
+		fmt.Printf("   %s\n", item.Title)
+		fmt.Printf("   %s\n", item.Link)
+		fmt.Printf("    %s\n", item.Description)
+		fmt.Printf("   %s\n", item.PubDate)
+		fmt.Println()
+	}
+	
+	return nil
+
 }
