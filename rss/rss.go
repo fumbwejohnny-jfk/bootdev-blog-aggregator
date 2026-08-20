@@ -64,7 +64,7 @@ func FetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 		return nil, err
 	}
 
-	// sanitaze the feed using the html.UnescapeString function to decode any 
+	// sanitize the feed using the html.UnescapeString function to decode any 
 	// HTML entities in the title and description fields
 	feed.Channel.Title = html.UnescapeString(feed.Channel.Title)
 	feed.Channel.Description = html.UnescapeString(feed.Channel.Description)

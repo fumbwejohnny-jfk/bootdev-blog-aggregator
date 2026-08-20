@@ -10,7 +10,7 @@ import (
 	"github.com/fumbwejohnny-jfk/gotar/cmds"
 	"github.com/fumbwejohnny-jfk/gotar/middleware"
 )
-import _ "github.com/lib/pq"
+
 
 func main() {
 	cfg := config.Read()
@@ -18,7 +18,6 @@ func main() {
 		fmt.Println("Error reading config file")
 		return
 	}
-	// fmt.Println("DB_URL:", cfg.DB_URL)
 	
 	// connect to database using cfg.DB_URL
 	db, err := sql.Open("postgres", cfg.DB_URL)
@@ -31,14 +30,12 @@ func main() {
 	//  db instance
 	dbQueries := database.New(db)
 
-
 	// Create a new State and Commands instance using the config
 	state := cmds.NewState(cfg, dbQueries)
 
 	// Create a new Commands instance using the config
 	commands := cmds.NewCommands()
 
-	
 
 	// get command-line arguments
 	args := os.Args[1:]
@@ -56,119 +53,92 @@ func main() {
 
 	switch cmd.Name {
 		case "login":
-			// Regiser the login command handler
+			// Register the login command handler
 			commands.Register("login", cmds.HandlerLogin)
 			
 			// Execute the login command
-			err = commands.Run(state, cmd)
-			if err != nil {
-				fmt.Println("Error executing login command:", err)
-				os.Exit(1)
-			}
+			executeCommand(cmd, state, commands)
+
 		case "register":
-			// Regiser the register command handler
+			// Register the register command handler
 			commands.Register("register", cmds.HandlerRegister)
 
 			// Execute the register command
-			err = commands.Run(state, cmd)
-			if err != nil {
-				fmt.Println("Error executing register command:", err)
-				os.Exit(1)
-			}
+			executeCommand(cmd, state, commands)
 		
 		case "reset":
-			// Regiser the reset command handler
+			// Register the reset command handler
 			commands.Register("reset", cmds.HandlerReset)
 
 			// Execute the reset command
-			err = commands.Run(state, cmd)
-			if err != nil {
-				fmt.Println("Error executing reset command:", err)
-				os.Exit(1)
-			}
+			executeCommand(cmd, state, commands)
 		
 		case "users":
-			// Regiser the users command handler
+			// Register the users command handler
 			commands.Register("users", cmds.HandlerUsers)
 
 			// Execute the users command
-			err = commands.Run(state, cmd)
-			if err != nil {
-				fmt.Println("Error executing users command:", err)
-				os.Exit(1)
-			}
+			executeCommand(cmd, state, commands)	
 		
 		case "agg":
-			// Regiser the agg command handler
+			// Register the agg command handler
 			commands.Register("agg", cmds.HandlerAgg)
 
 			// Execute the agg command
-			err = commands.Run(state, cmd)
-			if err != nil {
-				fmt.Println("Error executing agg command:", err)
-				os.Exit(1)
-			}
+			executeCommand(cmd, state, commands)
 		
 		case "addfeed":
-			// Regiser the addfeed command handler
 			
-			commands.Register("addfeed", cmds.HandlerAddFeed)
+			// Register the addfeed command handler
+			commands.Register("addfeed", middleware.MiddlewareLoggedIn(cmds.HandlerAddFeed))
 
 			// Execute the addfeed command
-			err = commands.Run(state, cmd)
-			if err != nil {
-				fmt.Println("Error executing addfeed command:", err)
-				os.Exit(1)
-			}
-
+			executeCommand(cmd, state, commands)
+				
 			cmd.Name = "follow"
 			cmd.Args[0] = cmd.Args[1]
 
-			// Regiser the follow command handler
-			commands.Register("follow", cmds.HandlerFollow)
+			// Register the follow command handler
+			commands.Register("follow", middleware.MiddlewareLoggedIn(cmds.HandlerFollow))
 
 			// Execute the follow command
-			err = commands.Run(state, cmd)
-			if err != nil {
-				fmt.Println("Error executing follow command:", err)
-				os.Exit(1)
-			}
+			executeCommand(cmd, state, commands)
 		
 		case "feeds":
-			// Regiser the feeds command handler
+			// Register the feeds command handler
 			commands.Register("feeds", cmds.HandlerFeeds)
 
 			// Execute the feeds command
-			err = commands.Run(state, cmd)
-			if err != nil {
-				fmt.Println("Error executing feeds command:", err)
-				os.Exit(1)
-			}
+			executeCommand(cmd, state, commands)
+			
 		case "follow":
-			// Regiser the follow command handler
-			commands.Register("follow", cmds.HandlerFollow)
+			// Register the follow command handler
+			commands.Register("follow", middleware.MiddlewareLoggedIn(cmds.HandlerFollow))
 
 			// Execute the follow command
-			err = commands.Run(state, cmd)
-			if err != nil {
-				fmt.Println("Error executing follow command:", err)
-				os.Exit(1)
-			}
-		
+			executeCommand(cmd, state, commands)
+			
 		case "following":
-			// Regiser the following command handler
-			commands.Register("following", cmds.HandlerFollowing)
+			// Register the following command handler
+			commands.Register("following", middleware.MiddlewareLoggedIn(cmds.HandlerFollowing))
 
 			// Execute the following command
-			err = commands.Run(state, cmd)
-			if err != nil {
-				fmt.Println("Error executing following command:", err)
-				os.Exit(1)
-			}
+			executeCommand(cmd, state, commands)
+		
 		default:
 			fmt.Println("Unknown command:", cmd.Name)
 			os.Exit(1)
+		
 	}
-	
+}
 
+
+// execute the command using the registered handlers
+func executeCommand(cmd *cmds.Command, state *cmds.State, commands *cmds.Commands) {
+	// Execute the command
+	err := commands.Run(state, cmd)
+	if err != nil {
+		fmt.Printf("Error executing %s command: %v", cmd.Name, err)
+		os.Exit(1)
+	}
 }

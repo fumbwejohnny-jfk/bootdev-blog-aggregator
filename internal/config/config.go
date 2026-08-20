@@ -43,6 +43,8 @@ func getConfigFilePath() (string, error) {
 	return dir + "/.gatorconfig.json", nil
 }
 
+
+
 func write(cfg Config) error {
 	filePath, err := getConfigFilePath()
 	if err != nil {
