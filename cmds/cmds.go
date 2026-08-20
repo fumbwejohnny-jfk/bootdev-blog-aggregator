@@ -333,3 +333,35 @@ func HandlerFollowing(s *State, cmd *Command, user database.User) error{
 	}
 	return nil
 }
+
+// HandlerUnfollowFeed command handler that allows a user to unfollow a feed
+func HandlerUnfollow(s *State, cmd *Command, user database.User) error {
+	if len(cmd.Args) < 1 {
+		return fmt.Errorf("unfollow command requires a feed URL argument")
+	}
+	feedURL := cmd.Args[0]
+
+	// get context
+	ctx := context.Background()
+
+	// Check if feed exists
+	existingFeed, err := s.db.GetFeed(ctx, feedURL)
+	if err != nil || existingFeed.ID == uuid.Nil {
+		return fmt.Errorf("feed with URL %s does not exist", feedURL)
+	}
+
+	// format the feed follow parameters for deletion
+	feedFollow := database.DeleteFeedFollowsParams{
+		UserID: user.ID,
+		FeedID: existingFeed.ID,
+	}
+
+	// Delete the feed follow from the database
+	err = s.db.DeleteFeedFollows(ctx, feedFollow)
+	if err != nil {
+		return fmt.Errorf("failed to unfollow feed: %v", err)
+	}
+
+	fmt.Printf("User %s has unfollowed feed %s\n", user.Name, existingFeed.Name)
+	return nil
+}

@@ -125,16 +125,12 @@ func main() {
 			// Execute the following command
 			executeCommand(cmd, state, commands)
 		
-		case "agg":
-			// Register the agg command handler
-			commands.Register("agg", cmds.HandlerAgg)
+		case "unfollow":
+			// Register the unfollow command handler
+			commands.Register("unfollow", middleware.MiddlewareLoggedIn(cmds.HandlerUnfollow))
 
-			// Execute the agg command
-			err = commands.Run(state, cmd)
-			if err != nil {
-				fmt.Println("Error executing agg command:", err)
-				os.Exit(1)
-			}
+			// Execute the unfollow command
+			executeCommand(cmd, state, commands)
 		
 		default:
 			fmt.Println("Unknown command:", cmd.Name)

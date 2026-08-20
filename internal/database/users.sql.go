@@ -72,7 +72,6 @@ func (q *Queries) GetUser(ctx context.Context, name string) (User, error) {
 	return i, err
 }
 
-<<<<<<< HEAD
 const getUserById = `-- name: GetUserById :one
 SELECT name FROM users WHERE id = $1
 `
@@ -84,8 +83,6 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (string, error)
 	return name, err
 }
 
-=======
->>>>>>> 2919a46 (added agg command)
 const getUsers = `-- name: GetUsers :many
 SELECT id, name, created_at, updated_at FROM users
 `

@@ -10,7 +10,6 @@ VALUES (
 )
 RETURNING *;
 
-
 -- name: GetFeed :one
 SELECT * FROM feeds WHERE url = $1;
 
@@ -24,7 +23,6 @@ SELECT * FROM feeds;
 DELETE FROM feeds;
 
 -- name: CreateFeedFollow :one
-
 WITH new_follow AS (
     INSERT INTO feed_follows (id, user_id, feed_id, created_at, updated_at)
     VALUES ($1, $2, $3, $4, $5)
@@ -53,3 +51,6 @@ INNER JOIN users
 INNER JOIN feeds
     ON feeds.id = feed_follows.feed_id
     WHERE feed_follows.user_id = $1;
+
+-- name: DeleteFeedFollows :exec
+DELETE FROM feed_follows WHERE user_id = $1 AND feed_id = $2;

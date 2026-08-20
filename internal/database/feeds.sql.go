@@ -56,7 +56,6 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 }
 
 const createFeedFollow = `-- name: CreateFeedFollow :one
-
 WITH new_follow AS (
     INSERT INTO feed_follows (id, user_id, feed_id, created_at, updated_at)
     VALUES ($1, $2, $3, $4, $5)
@@ -110,6 +109,20 @@ func (q *Queries) CreateFeedFollow(ctx context.Context, arg CreateFeedFollowPara
 		&i.FeedName,
 	)
 	return i, err
+}
+
+const deleteFeedFollows = `-- name: DeleteFeedFollows :exec
+DELETE FROM feed_follows WHERE user_id = $1 AND feed_id = $2
+`
+
+type DeleteFeedFollowsParams struct {
+	UserID uuid.UUID
+	FeedID uuid.UUID
+}
+
+func (q *Queries) DeleteFeedFollows(ctx context.Context, arg DeleteFeedFollowsParams) error {
+	_, err := q.db.ExecContext(ctx, deleteFeedFollows, arg.UserID, arg.FeedID)
+	return err
 }
 
 const deleteFeeds = `-- name: DeleteFeeds :exec
