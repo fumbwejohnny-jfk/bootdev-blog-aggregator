@@ -8,6 +8,7 @@ import (
 	"github.com/fumbwejohnny-jfk/gotar/internal/config"
 	"github.com/fumbwejohnny-jfk/gotar/internal/database"
 	"github.com/fumbwejohnny-jfk/gotar/cmds"
+	"github.com/fumbwejohnny-jfk/gotar/middleware"
 )
 import _ "github.com/lib/pq"
 
@@ -110,6 +111,7 @@ func main() {
 		
 		case "addfeed":
 			// Regiser the addfeed command handler
+			
 			commands.Register("addfeed", cmds.HandlerAddFeed)
 
 			// Execute the addfeed command
@@ -119,7 +121,6 @@ func main() {
 				os.Exit(1)
 			}
 
-			fmt.Println(cmd.Args)
 			cmd.Name = "follow"
 			cmd.Args[0] = cmd.Args[1]
 

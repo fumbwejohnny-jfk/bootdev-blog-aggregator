@@ -44,6 +44,9 @@ func NewState(cfg *config.Config, db *database.Queries) *State {
 func (s *State) DB() *database.Queries {
 	return s.db
 }
+func (s *State) Config() *config.Config {
+	return s.cfg
+}
 
 
 // Execute a command by looking up its handler and calling it
@@ -204,7 +207,7 @@ func HandlerAgg(s *State, cmd *Command) error {
 }
 
 // HandlerAddFeed command handler that adds a new feed to the database
-func HandlerAddFeed(s *State, cmd *Command) error {
+func HandlerAddFeed(s *State, cmd *Command, user database.User) error {
 	if len(cmd.Args) < 2 {
 		return fmt.Errorf("addfeed command requires a feed name and URL argument")
 	}
@@ -214,17 +217,17 @@ func HandlerAddFeed(s *State, cmd *Command) error {
 	// get context
 	ctx := context.Background()
 
-	// get current user from config
-	currentUserName := s.cfg.CurrentUserName
-	if currentUserName == "" {
-		return fmt.Errorf("no user is currently logged in. Please log in first.")
-	}
+		// // get current user from config
+		// currentUserName := s.cfg.CurrentUserName
+		// if currentUserName == "" {
+		// 	return fmt.Errorf("no user is currently logged in. Please log in first.")
+		// }
 
-	// Check if the current user exists in the database
-	currentUser, err := s.db.GetUser(ctx, currentUserName)
-	if err != nil || currentUser.ID == uuid.Nil {
-		return fmt.Errorf("current user %s does not exist in the database", currentUserName)
-	}
+		// // Check if the current user exists in the database
+		// currentUser, err := s.db.GetUser(ctx, currentUserName)
+		// if err != nil || currentUser.ID == uuid.Nil {
+		// 	return fmt.Errorf("current user %s does not exist in the database", currentUserName)
+		// }
 
 	// Check if feed already exists
 	existingFeed, err := s.db.GetFeed(ctx, feedURL)
@@ -237,7 +240,7 @@ func HandlerAddFeed(s *State, cmd *Command) error {
 		ID:        uuid.New(),
 		Name:      feedName,
 		Url:       feedURL,
-		UserID:    currentUser.ID,
+		UserID:    user.ID,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
