@@ -168,10 +168,10 @@ func HandlerUsers(s *State, cmd *Command) error {
 	// Print the list of users
 	fmt.Println("List of users:")
 	for _, user := range users {
-		fmt.Printf("* Name: %s ", user.Name)
+		fmt.Printf("* %s", user.Name)
 
 		if user.Name == s.cfg.CurrentUserName {
-			fmt.Printf(" (current )")
+			fmt.Printf(" (current)")
 		}
 		fmt.Println()
 	}
