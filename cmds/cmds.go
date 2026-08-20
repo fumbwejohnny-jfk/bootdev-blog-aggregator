@@ -250,3 +250,29 @@ func HandlerAddFeed(s *State, cmd *Command) error {
 	fmt.Printf("Feed created: %+v\n", createdFeed)
 	return nil
 }
+
+// HandlerListFeeds command handler that lists all feeds in the database
+func HandlerFeeds(s *State, cmd *Command) error {
+	// get context
+	ctx := context.Background()
+
+	// Get all feeds from the database
+	feeds, err := s.db.GetFeeds(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get feeds: %v", err)
+	}
+
+	// Print the list of feeds
+	fmt.Println("List of feeds:")
+	for _, feed := range feeds {
+		fmt.Printf("* %s — (%s) ", feed.Name, feed.Url)
+		user, err := s.db.GetUserById(ctx, feed.UserID)
+		
+		if err != nil {
+			fmt.Printf("  (Error fetching user: %v)\n", err)
+		} else {
+			fmt.Printf("— %s\n", user)
+		}
+	}
+	return nil
+}

@@ -14,6 +14,9 @@ RETURNING *;
 -- name: GetFeed :one
 SELECT * FROM feeds WHERE url = $1;
 
+-- name: GetFeedById :one
+SELECT name FROM feeds WHERE id = $1;
+
 -- name: GetFeeds :many
 SELECT * FROM feeds; 
 
