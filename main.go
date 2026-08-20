@@ -108,6 +108,17 @@ func main() {
 				os.Exit(1)
 			}
 		
+		case "addfeed":
+			// Regiser the addfeed command handler
+			commands.Register("addfeed", cmds.HandlerAddFeed)
+
+			// Execute the addfeed command
+			err = commands.Run(state, cmd)
+			if err != nil {
+				fmt.Println("Error executing addfeed command:", err)
+				os.Exit(1)
+			}
+		
 		default:
 			fmt.Println("Unknown command:", cmd.Name)
 			os.Exit(1)

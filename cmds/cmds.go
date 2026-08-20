@@ -200,7 +200,53 @@ func HandlerAgg(s *State, cmd *Command) error {
 		fmt.Printf("   %s\n", item.PubDate)
 		fmt.Println()
 	}
-	
 	return nil
+}
 
+// HandlerAddFeed command handler that adds a new feed to the database
+func HandlerAddFeed(s *State, cmd *Command) error {
+	if len(cmd.Args) < 2 {
+		return fmt.Errorf("addfeed command requires a feed name and URL argument")
+	}
+	feedName := cmd.Args[0]
+	feedURL := cmd.Args[1]
+
+	// get context
+	ctx := context.Background()
+
+	// get current user from config
+	currentUserName := s.cfg.CurrentUserName
+	if currentUserName == "" {
+		return fmt.Errorf("no user is currently logged in. Please log in first.")
+	}
+
+	// Check if the current user exists in the database
+	currentUser, err := s.db.GetUser(ctx, currentUserName)
+	if err != nil || currentUser.ID == uuid.Nil {
+		return fmt.Errorf("current user %s does not exist in the database", currentUserName)
+	}
+
+	// Check if feed already exists
+	existingFeed, err := s.db.GetFeed(ctx, feedURL)
+	if err == nil && existingFeed.ID != uuid.Nil {
+		return fmt.Errorf("feed with URL %s already exists", feedURL)
+	}
+
+
+	// Create a new feed in the database
+	newFeed := database.CreateFeedParams{
+		ID:        uuid.New(),
+		Name:      feedName,
+		Url:       feedURL,
+		UserID:    currentUser.ID,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	createdFeed, err := s.db.CreateFeed(ctx, newFeed)
+	if err != nil {
+		return fmt.Errorf("failed to create feed: %v", err)
+	}
+
+	fmt.Printf("Feed created: %+v\n", createdFeed)
+	return nil
 }

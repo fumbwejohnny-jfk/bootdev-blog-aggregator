@@ -16,3 +16,4 @@ SELECT * FROM users ;
 
 -- name: DeleteUsers :exec
 DELETE FROM users;
+
