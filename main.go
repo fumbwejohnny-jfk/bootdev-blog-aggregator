@@ -74,6 +74,31 @@ func main() {
 				fmt.Println("Error executing register command:", err)
 				os.Exit(1)
 			}
+		
+		case "reset":
+			// Regiser the reset command handler
+			commands.Register("reset", cmds.HandlerReset)
+
+			// Execute the reset command
+			err = commands.Run(state, cmd)
+			if err != nil {
+				fmt.Println("Error executing reset command:", err)
+				os.Exit(1)
+			}
+		
+		case "users":
+			// Regiser the users command handler
+			commands.Register("users", cmds.HandlerUsers)
+
+			// Execute the users command
+			err = commands.Run(state, cmd)
+			if err != nil {
+				fmt.Println("Error executing users command:", err)
+				os.Exit(1)
+			}
+		default:
+			fmt.Println("Unknown command:", cmd.Name)
+			os.Exit(1)
 	}
 	
 

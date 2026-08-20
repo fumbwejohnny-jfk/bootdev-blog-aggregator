@@ -44,6 +44,20 @@ func (s *State) DB() *database.Queries {
 	return s.db
 }
 
+
+// Execute a command by looking up its handler and calling it
+func (c *Commands) Run(state *State, cmd *Command) error {
+	if handler, ok := c.handlers[cmd.Name]; ok {
+		return handler(state, cmd)
+	}
+	return nil
+}
+
+// Register a new command handler
+func (c *Commands) Register(name string, handler func(*State, *Command) error) {
+	c.handlers[name] = handler
+}
+
 // Login command handler that sets the current user in the config file
 func HandlerLogin(s *State, cmd *Command) error {
 	if len(cmd.Args) < 1 {
@@ -120,15 +134,46 @@ func HandlerRegister(s *State, cmd *Command) error {
 	return nil
 }
 
-// Execute a command by looking up its handler and calling it
-func (c *Commands) Run(state *State, cmd *Command) error {
-	if handler, ok := c.handlers[cmd.Name]; ok {
-		return handler(state, cmd)
+func HandlerReset(s *State, cmd *Command) error {
+	// get context
+	ctx := context.Background()
+
+	// Delete all users from the database
+	err := s.db.DeleteUsers(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to delete users: %v", err)
 	}
+
+	// Clear the current user in the config
+	err = s.cfg.SetUser("")
+	if err != nil {
+		return fmt.Errorf("failed to clear user in config: %v", err)
+	}
+
+	fmt.Println("All users have been deleted and the current user has been cleared.")
 	return nil
 }
 
-// Register a new command handler
-func (c *Commands) Register(name string, handler func(*State, *Command) error) {
-	c.handlers[name] = handler
+// Users command handler that lists all users in the database
+func HandlerUsers(s *State, cmd *Command) error {
+	// get context
+	ctx := context.Background()
+
+	// Get all users from the database
+	users, err := s.db.GetUsers(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get users: %v", err)
+	}
+
+	// Print the list of users
+	fmt.Println("List of users:")
+	for _, user := range users {
+		fmt.Printf("* Name: %s ", user.Name)
+
+		if user.Name == s.cfg.CurrentUserName {
+			fmt.Printf(" (current )")
+		}
+		fmt.Println()
+	}
+	return nil
 }
