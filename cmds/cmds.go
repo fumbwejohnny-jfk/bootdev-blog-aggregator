@@ -92,7 +92,6 @@ func HandlerLogin(s *State, cmd *Command) error {
 	return nil
 }
 
-
 /*
 Register command handler that creates a new user in the database and sets the current user in the config file
 	1. ensure the name was passed in as an argument
@@ -173,6 +172,12 @@ func HandlerUsers(s *State, cmd *Command) error {
 	if err != nil {
 		return fmt.Errorf("failed to get users: %v", err)
 	}
+
+	// Get the current user from the config
+	currentUser := s.cfg.CurrentUserName
+	if currentUser == "" {
+		fmt.Println("No user is currently logged in")
+	} 
 
 	// Print the list of users
 	fmt.Println("List of users:")
