@@ -255,11 +255,11 @@ func (q *Queries) GetFeeds(ctx context.Context) ([]Feed, error) {
 
 const getNextFeedToFetch = `-- name: GetNextFeedToFetch :one
 SELECT id, name, url, user_id, created_at, updated_at, last_fetched_at FROM feeds
-WHERE last_fetched_at IS NULL OR last_fetched_at < NOW() - INTERVAL '1 hour'
 ORDER BY last_fetched_at ASC NULLS FIRST
 LIMIT 1
 `
 
+// WHERE last_fetched_at IS NULL OR last_fetched_at < NOW() - INTERVAL '1 hour'
 func (q *Queries) GetNextFeedToFetch(ctx context.Context) (Feed, error) {
 	row := q.db.QueryRowContext(ctx, getNextFeedToFetch)
 	var i Feed

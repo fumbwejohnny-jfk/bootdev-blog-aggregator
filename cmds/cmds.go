@@ -7,6 +7,7 @@ import (
 	"github.com/fumbwejohnny-jfk/gotar/rss"
 	"github.com/google/uuid"
 	"time"
+	"database/sql"
 	"context"
 )
 
@@ -197,27 +198,66 @@ func HandlerUsers(s *State, cmd *Command) error {
 	return nil
 }
 
-func HandlerAgg(s *State, cmd *Command) error {
+// ScrapeFeeds fetches the next feed from the database, marks it as fetched, and prints the aggregated feed items
+func ScrapeFeeds(s *State)  error {
 	// get context
 	ctx := context.Background()
 
-	// Get all rss feeds from  website and aggregate them into a single feed
-	feed, err := rss.FetchFeed(ctx, "https://wagslane.dev/index.xml")
+	// Get the next feed from the database
+	feed, err := s.db.GetNextFeedToFetch(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get next feed: %v", err)
+	}
+
+	// Mark it as fetched
+	marked := database.MarkFeedFetchedParams  {
+		LastFetchedAt: sql.NullTime{
+    		Time:  time.Now(),
+    		Valid: true,
+		},
+		UpdatedAt:     time.Now(),
+		ID:            feed.ID,
+	}
+	err = s.db.MarkFeedFetched(ctx, marked)
+	if err != nil {
+		return fmt.Errorf("failed to mark feed as fetched: %v", err)
+	}
+
+	// Fetch the feed from the URL
+	feeds, err := rss.FetchFeed(ctx, feed.Url)
 	if err != nil {
 		return fmt.Errorf("failed to fetch feed: %v", err)
 	}
 
 	// Print the aggregated feed
-	fmt.Printf(" %s\n", feed.Channel.Title)
-	fmt.Printf(" %s\n", feed.Channel.Link)
-	fmt.Printf(" %s\n", feed.Channel.Description)
-	for _, item := range feed.Channel.Items {
-		fmt.Printf("   %s\n", item.Title)
-		fmt.Printf("   %s\n", item.Link)
-		fmt.Printf("    %s\n", item.Description)
-		fmt.Printf("   %s\n", item.PubDate)
-		fmt.Println()
+	for _, item := range feeds.Channel.Items {
+		fmt.Printf("%s\n", item.Title)
 	}
+	return nil
+}
+
+// HandlerAgg command handler that collects feeds at a specified interval
+func HandlerAgg(s *State, cmd *Command) error {
+	// Arguments: none
+	if len(cmd.Args) < 1 {
+		return fmt.Errorf("agg command requires a time between requests argument (e.g., 1m, 30s, 2h)")
+	}
+
+	// Parse the time between requests argument
+	time_between_reqs, err := time.ParseDuration(cmd.Args[0])
+	if err != nil {
+		return fmt.Errorf("invalid duration format: %v", err)
+	}
+
+	fmt.Printf("Collecting feeds every %s\n", time_between_reqs)
+
+	// Start a ticker to collect feeds at the specified interval
+	ticker := time.NewTicker(time_between_reqs)
+	for ; ; <-ticker.C {
+		ScrapeFeeds(s)
+		fmt.Printf("\nWaiting for %s before next request...\n\n", time_between_reqs)
+	}
+
 	return nil
 }
 
