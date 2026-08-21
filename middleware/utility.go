@@ -12,6 +12,9 @@ import (
 func MiddlewareLoggedIn( handler func(s *cmds.State, cmd *cmds.Command, user database.User) error,) func(*cmds.State, *cmds.Command) error {
     return func(s *cmds.State, cmd *cmds.Command) error {
         username := s.Config().CurrentUserName
+        if username == "" {
+            return fmt.Errorf("no user is currently logged in")
+        }
 
         user, err := s.DB().GetUser(context.Background(), username)
         if err != nil {

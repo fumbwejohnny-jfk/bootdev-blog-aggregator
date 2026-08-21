@@ -88,7 +88,6 @@ func main() {
 			executeCommand(cmd, state, commands)
 		
 		case "addfeed":
-			
 			// Register the addfeed command handler
 			commands.Register("addfeed", middleware.MiddlewareLoggedIn(cmds.HandlerAddFeed))
 
@@ -133,9 +132,8 @@ func main() {
 			executeCommand(cmd, state, commands)
 		
 		default:
-			fmt.Println("Unknown command:", cmd.Name)
+			fmt.Printf("Unknown command: %s\n", cmd.Name)
 			os.Exit(1)
-		
 	}
 }
 
@@ -145,7 +143,7 @@ func executeCommand(cmd *cmds.Command, state *cmds.State, commands *cmds.Command
 	// Execute the command
 	err := commands.Run(state, cmd)
 	if err != nil {
-		fmt.Printf("Error executing %s command: %v", cmd.Name, err)
+		fmt.Printf("Error executing %s command: %v\n", cmd.Name, err)
 		os.Exit(1)
 	}
 }

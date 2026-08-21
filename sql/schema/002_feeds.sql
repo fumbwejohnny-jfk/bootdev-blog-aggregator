@@ -1,6 +1,4 @@
 
-
--- Create the feeds table (goose Up)
 -- +goose Up
 
 CREATE TABLE feeds (
@@ -9,7 +7,8 @@ CREATE TABLE feeds (
     url TEXT UNIQUE NOT NULL,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    last_fetched_at TIMESTAMP
 );
 
 CREATE TABLE feed_follows(
@@ -22,4 +21,4 @@ CREATE TABLE feed_follows(
 );
 
 -- +goose Down
-DROP TABLE IF EXISTS feeds;
+DROP TABLE IF EXISTS feeds, feed_follows CASCADE;

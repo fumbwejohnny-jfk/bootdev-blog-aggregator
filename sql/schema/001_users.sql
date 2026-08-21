@@ -1,6 +1,4 @@
 
-
--- Create the users table (goose Up)
 -- +goose Up
 CREATE TABLE users (
     id UUID PRIMARY KEY,
@@ -11,4 +9,4 @@ CREATE TABLE users (
 
 
 -- +goose Down
-DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS users CASCADE;

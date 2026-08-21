@@ -190,6 +190,10 @@ func HandlerUsers(s *State, cmd *Command) error {
 		fmt.Println()
 	}
 
+	if len(users) == 0 {
+		fmt.Println("No users available.")
+	}
+
 	return nil
 }
 
@@ -274,6 +278,9 @@ func HandlerFeeds(s *State, cmd *Command) error {
 		} else {
 			fmt.Printf("— %s\n", user)
 		}
+	}
+	if len(feeds) == 0 {
+		fmt.Println("No feeds available.")
 	}
 	return nil
 }

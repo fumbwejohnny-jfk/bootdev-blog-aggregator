@@ -54,3 +54,15 @@ INNER JOIN feeds
 
 -- name: DeleteFeedFollows :exec
 DELETE FROM feed_follows WHERE user_id = $1 AND feed_id = $2;
+
+-- name: MarkFeedFetched :exec
+UPDATE feeds
+SET last_fetched_at = $1, updated_at = $2
+WHERE id = $3;
+
+
+-- name: GetNextFeedToFetch :one
+SELECT * FROM feeds
+WHERE last_fetched_at IS NULL OR last_fetched_at < NOW() - INTERVAL '1 hour'
+ORDER BY last_fetched_at ASC NULLS FIRST
+LIMIT 1;
