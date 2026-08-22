@@ -9,6 +9,7 @@ import (
 	"time"
 	"database/sql"
 	"context"
+	"strconv"
 )
 
 // State struct that holds the current configuration
@@ -208,7 +209,7 @@ func ScrapeFeeds(s *State)  error {
 	if err != nil {
 		return fmt.Errorf("failed to get next feed: %v", err)
 	}
-
+ 
 	// Mark it as fetched
 	marked := database.MarkFeedFetchedParams  {
 		LastFetchedAt: sql.NullTime{
@@ -217,7 +218,8 @@ func ScrapeFeeds(s *State)  error {
 		},
 		UpdatedAt:     time.Now(),
 		ID:            feed.ID,
-	}
+	} 
+	
 	err = s.db.MarkFeedFetched(ctx, marked)
 	if err != nil {
 		return fmt.Errorf("failed to mark feed as fetched: %v", err)
@@ -228,10 +230,34 @@ func ScrapeFeeds(s *State)  error {
 	if err != nil {
 		return fmt.Errorf("failed to fetch feed: %v", err)
 	}
+	
 
 	// Print the aggregated feed
 	for _, item := range feeds.Channel.Items {
-		fmt.Printf("%s\n", item.Title)
+		pubDate, err := time.Parse("2006-01-02 15:04:05", item.PubDate)
+		if err != nil {
+			fmt.Printf("Error parsing publication date for item %s: %v\n", item.PubDate, err)
+			continue
+		}
+		
+		post := database.CreatePostParams{
+			ID:          uuid.New(),
+			Url:         item.Link,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+			Title:       item.Title,
+			Description  : sql.NullString{
+				String: item.Description,
+				Valid:  item.Description != "",
+			},
+			PublishedAt  : pubDate,
+			FeedID      : feed.ID,
+		}
+		fmt.Printf("Adding post: %+v\n", post)
+		_, err = s.db.CreatePost(ctx, post)
+		if err != nil {
+			return fmt.Errorf("failed to create post: %v", err)
+		}
 	}
 	return nil
 }
@@ -410,5 +436,44 @@ func HandlerUnfollow(s *State, cmd *Command, user database.User) error {
 	}
 
 	fmt.Printf("User %s has unfollowed feed %s\n", user.Name, existingFeed.Name)
+	return nil
+}
+
+// HandlerBrowse command handler that lists all posts from feeds followed by the current user
+func HandlerBrowse(s *State, cmd *Command, user database.User) error {
+	limit := 2
+
+	if len(cmd.Args) > 0 {
+		parsed, err := strconv.Atoi(cmd.Args[0])
+		if err != nil {
+			return fmt.Errorf("invalid limit: %w", err)
+		}
+		limit = parsed
+	}
+	
+	
+	// get context
+	ctx := context.Background()
+
+	// format the parameters for getting posts for the user
+	params := database.GetPostsForUserParams{
+		ID: user.ID,
+		Limit:  int32(limit), // You can adjust the limit as needed
+	}
+    
+	// Get all posts from feeds followed by the current user
+	posts, err := s.db.GetPostsForUser(ctx, params)
+	if err != nil {
+		return fmt.Errorf("failed to get posts for user: %v", err)
+	}
+
+	// Print the list of posts
+	fmt.Printf("Posts from feeds followed by user %s:\n", user.Name)
+	for _, post := range posts {
+		fmt.Printf("* %s — %s\n", post.Title, post.Url)
+	}
+	if len(posts) == 0 {
+		fmt.Println("No posts available.")
+	}
 	return nil
 }

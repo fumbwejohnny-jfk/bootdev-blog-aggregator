@@ -131,6 +131,13 @@ func main() {
 			// Execute the unfollow command
 			executeCommand(cmd, state, commands)
 		
+		case "browse":
+			// Register the browse command handler
+			commands.Register("browse", middleware.MiddlewareLoggedIn(cmds.HandlerBrowse))
+
+			// Execute the browse command
+			executeCommand(cmd, state, commands)
+		
 		default:
 			fmt.Printf("Unknown command: %s\n", cmd.Name)
 			os.Exit(1)
