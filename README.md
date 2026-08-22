@@ -32,6 +32,38 @@ A lightweight Go command-line app for managing users and following RSS/Atom feed
 - PostgreSQL
 - Optional: `sqlc` and `goose` if you want to regenerate or migrate the SQL layer manually
 
+## Install the `gator` CLI
+
+To install the CLI with Go's package installer, run:
+
+```bash
+go install github.com/fumbwejohnny-jfk/gotar@latest
+```
+
+If you want to install from a local checkout instead, run this in the repository root:
+
+```bash
+go install .
+```
+
+Make sure Go's bin directory is on your `PATH`:
+
+```bash
+export PATH="$(go env GOPATH)/bin:$PATH"
+```
+
+Then verify the binary is available:
+
+```bash
+gator --help
+```
+
+If your binary is built as `gotar` instead of `gator`, use:
+
+```bash
+gotar --help
+```
+
 ## Setup
 
 1. Create a PostgreSQL database for the app.

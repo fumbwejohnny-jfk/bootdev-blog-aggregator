@@ -199,6 +199,22 @@ func HandlerUsers(s *State, cmd *Command) error {
 	return nil
 }
 
+// format date
+func parsePubDate(value string) (time.Time, error) {
+    layouts := []string{
+        time.RFC1123,
+        "2006-01-02 15:04:05",
+    }
+
+    for _, layout := range layouts {
+        if t, err := time.Parse(layout, value); err == nil {
+            return t, nil
+        }
+    }
+
+    return time.Time{}, fmt.Errorf("unsupported publication date format: %q", value)
+}
+
 // ScrapeFeeds fetches the next feed from the database, marks it as fetched, and prints the aggregated feed items
 func ScrapeFeeds(s *State)  error {
 	// get context
@@ -234,10 +250,10 @@ func ScrapeFeeds(s *State)  error {
 
 	// Print the aggregated feed
 	for _, item := range feeds.Channel.Items {
-		pubDate, err := time.Parse("2006-01-02 15:04:05", item.PubDate)
+		pubDate, err := parsePubDate(item.PubDate)
 		if err != nil {
 			fmt.Printf("Error parsing publication date for item %s: %v\n", item.PubDate, err)
-			continue
+			return nil
 		}
 		
 		post := database.CreatePostParams{
